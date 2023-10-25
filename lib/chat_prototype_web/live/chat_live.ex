@@ -1,11 +1,13 @@
 defmodule ChatPrototypeWeb.ChatLive do
   use ChatPrototypeWeb, :live_view
 
-  def mount(_params, _session, socket) do
+  def mount(%{"id" => room_id}, _session, socket) do
+    ChatPrototypeWeb.Endpoint.subscribe(room_id)
+
     {:ok,
      assign(socket,
        messages: [%{user: "Chatbot", text: "Welcome to my chat!"}],
-       form: to_form(%{user_input: "", text_input: ""})
+       form: to_form(%{text_input: ""})
      )}
   end
 

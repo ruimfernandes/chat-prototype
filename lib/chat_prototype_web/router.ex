@@ -17,7 +17,8 @@ defmodule ChatPrototypeWeb.Router do
   scope "/", ChatPrototypeWeb do
     pipe_through :browser
 
-    live "/", ChatLive, :home
+    live "/", WelcomeLive, :home
+    live "/:id", ChatLive, :home
   end
 
   # Other scopes may use custom stacks.
