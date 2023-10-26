@@ -15,17 +15,23 @@ defmodule ChatPrototypeWeb.RoomsListLive do
 
   def render(assigns) do
     ~H"""
-    <div>
-      <p class="text-2xl">Hey <%= @user_name %>! Join any room you want!</p>
-      <div class="mt-10">
+    <div class="flex flex flex-col">
+      <p class="text-2xl text-center">Hey <%= @user_name %>! Join any room you want!</p>
+      <div class="mt-10 flex flex-col gap-y-4 justify-start">
         <%= for room <- @rooms do %>
-          <%= room.name %>
-          <%= if !room.active? do %>
-            <.button phx-click="join_room" phx-value-id={room.id} phx-target={@myself}>Join</.button>
-          <% end %>
+          <div class="h-10 flex items-center gap-12">
+            <%= room.name %>
+            <%= if !room.active? do %>
+              <.button phx-click="join_room" phx-value-id={room.id} phx-target={@myself}>
+                Join
+              </.button>
+            <% else %>
+              (joinned)
+            <% end %>
+          </div>
         <% end %>
       </div>
-      <div class="mt-10">
+      <div class="flex flex-row-reverse justify-start gap-x-8 absolute inset-x-0 bottom-0">
         <%= for active_room <- @active_rooms do %>
           <.live_component module={ChatPrototypeWeb.ChatRoomLive} id={active_room} />
         <% end %>
