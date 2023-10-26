@@ -57,8 +57,8 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
   end
 
   def subscribe_to_topic(true, id, user) do
-    ChatPrototypeWeb.Presence.track(self(), id, user, %{})
     ChatPrototypeWeb.Endpoint.subscribe(id)
+    ChatPrototypeWeb.Presence.track(self(), id, user, %{})
   end
 
   def subscribe_to_topic(false, _id, _user) do
