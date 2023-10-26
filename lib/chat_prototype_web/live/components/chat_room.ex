@@ -5,14 +5,12 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
     {:ok,
      assign(socket,
        messages: [%{user: "Chatbot", text: "UserX joinned the room!"}],
-       form: to_form(%{text: ""}),
+       form: to_form(%{"text" => ""}),
        first_update: true
      )}
   end
 
   def update(%{new_message: new_message}, socket) do
-    IO.inspect(new_message, label: "Ggoooooooooooo")
-
     {:ok,
      assign(socket,
        messages: Enum.concat(socket.assigns.messages, [new_message])
@@ -20,11 +18,9 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
   end
 
   def update(assigns, socket) do
-    IO.inspect(socket)
-    IO.inspect(assigns)
     subscribe_to_topic(socket.assigns.first_update, assigns.id)
 
-    {:ok, assign(socket, id: assigns.id, first_update: false)}
+    {:ok, assign(socket, id: assigns.id, user: assigns.user, first_update: false)}
   end
 
   def render(assigns) do
@@ -43,7 +39,7 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
         <.simple_form for={@form} phx-submit="send_message" phx-target={@myself}>
           <div class="flex flex-row gap-2">
             <div class="grow">
-              <.input field={@form[:text]} value={@form.params.text} />
+              <.input field={@form["text"]} value={@form.params["text"]} />
             </div>
             <.button class="mt-2">Send</.button>
           </div>
@@ -55,7 +51,7 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
 
   def handle_event("send_message", %{"text" => text}, socket) do
     ChatPrototypeWeb.Endpoint.broadcast(socket.assigns.id, "new-message", %{
-      user: "NABO",
+      user: socket.assigns.user,
       text: text
     })
 

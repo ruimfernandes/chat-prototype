@@ -33,7 +33,7 @@ defmodule ChatPrototypeWeb.RoomsListLive do
       </div>
       <div class="flex flex-row-reverse justify-start gap-x-8 absolute inset-x-0 bottom-0">
         <%= for active_room <- @active_rooms do %>
-          <.live_component module={ChatPrototypeWeb.ChatRoomLive} id={active_room} />
+          <.live_component module={ChatPrototypeWeb.ChatRoomLive} id={active_room} user={@user_name} />
         <% end %>
       </div>
     </div>
