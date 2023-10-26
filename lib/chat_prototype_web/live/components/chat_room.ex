@@ -4,17 +4,14 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
   def mount(socket) do
     {:ok,
      assign(socket,
-       messages: [%{user: "Chatbot", text: "UserX joinned the room!"}],
+       messages: [%{uuid: UUID.uuid4(), user: "Chatbot", text: "UserX joinned the room!"}],
        form: to_form(%{"text" => ""}),
        first_update: true
-     )}
+     ), temporary_assigns: [messages: []]}
   end
 
   def update(%{new_message: new_message}, socket) do
-    {:ok,
-     assign(socket,
-       messages: Enum.concat(socket.assigns.messages, [new_message])
-     )}
+    {:ok, assign(socket, messages: [new_message])}
   end
 
   def update(assigns, socket) do
@@ -28,9 +25,9 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
     <div class="flex flex-col border-2 bg-slate-300">
       <p class="text-2xl bg-slate-400">Room name here!</p>
       <div class="flex flex-col grow justify-between">
-        <div class="p-4">
+        <div class="p-4" id="chat-messages" phx-update="append">
           <%= for message <- @messages do %>
-            <div>
+            <div id={message.uuid}>
               <b><%= message.user %></b> - <%= message.text %>
             </div>
           <% end %>
@@ -51,6 +48,7 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
 
   def handle_event("send_message", %{"text" => text}, socket) do
     ChatPrototypeWeb.Endpoint.broadcast(socket.assigns.id, "new-message", %{
+      uuid: UUID.uuid4(),
       user: socket.assigns.user,
       text: text
     })
