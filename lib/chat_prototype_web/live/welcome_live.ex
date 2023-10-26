@@ -5,8 +5,8 @@ defmodule ChatPrototypeWeb.WelcomeLive do
     {:ok,
      assign(socket,
        stage: :rooms_list,
-       user_name: "",
-       form: to_form(%{user_name: ""})
+       user_name: get_random_name(),
+       form: to_form(%{"user_name" => ""})
      )}
   end
 
@@ -35,7 +35,7 @@ defmodule ChatPrototypeWeb.WelcomeLive do
 
       <.simple_form class="mt-40" for={@form} phx-submit="sign_in">
         <b> Please set your username </b>
-        <p>User name: <.input field={@form[:user_name]} value={@form.params.user_name} /></p>
+        <p>User name: <.input field={@form["user_name"]} value={@form.params["user_name"]} /></p>
         <.button>Sign in</.button>
       </.simple_form>
     </div>
@@ -50,11 +50,17 @@ defmodule ChatPrototypeWeb.WelcomeLive do
      )}
   end
 
-  def handle_info(%{event: "new-message", payload: message, topic: room_id} = cenas, socket) do
-    IO.inspect("PARENT")
-    IO.inspect(cenas)
+  def handle_info(%{event: "new-message", payload: message, topic: room_id}, socket) do
     send_update(ChatPrototypeWeb.ChatRoomLive, id: room_id, new_message: message)
 
     {:noreply, socket}
+  end
+
+  def get_random_name() do
+    names_list = ["Maria", "Alice", "Leonor", "Matilde", "Benedita", "Carolina", "Beatriz", "Margarida", "Francisca", "Camila", "Francisco", "Afonso", "João", "Tomás", "Duarte", "Lourenço", "Santiago", "Martim", "Miguel", "Gabriel"]
+
+    random_index = :rand.uniform(20) - 1
+
+    Enum.at(names_list, random_index)
   end
 end
