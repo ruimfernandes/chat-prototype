@@ -57,7 +57,28 @@ defmodule ChatPrototypeWeb.WelcomeLive do
   end
 
   def get_random_name() do
-    names_list = ["Maria", "Alice", "Leonor", "Matilde", "Benedita", "Carolina", "Beatriz", "Margarida", "Francisca", "Camila", "Francisco", "Afonso", "João", "Tomás", "Duarte", "Lourenço", "Santiago", "Martim", "Miguel", "Gabriel"]
+    names_list = [
+      "Maria",
+      "Alice",
+      "Leonor",
+      "Matilde",
+      "Benedita",
+      "Carolina",
+      "Beatriz",
+      "Margarida",
+      "Francisca",
+      "Camila",
+      "Francisco",
+      "Afonso",
+      "João",
+      "Tomás",
+      "Duarte",
+      "Lourenço",
+      "Santiago",
+      "Martim",
+      "Miguel",
+      "Gabriel"
+    ]
 
     random_index = :rand.uniform(20) - 1
 
