@@ -59,10 +59,7 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
       text: text
     })
 
-    {:noreply,
-     assign(socket,
-       messages: Enum.concat(socket.assigns.messages, [%{user: "NABO", text: text}])
-     )}
+    {:noreply, socket}
   end
 
   def subscribe_to_topic(true, id) do
