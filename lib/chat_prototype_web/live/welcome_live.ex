@@ -4,7 +4,7 @@ defmodule ChatPrototypeWeb.WelcomeLive do
   def mount(_params, _session, socket) do
     {:ok,
      assign(socket,
-       stage: :welcome,
+       stage: :rooms_list,
        user_name: "",
        form: to_form(%{user_name: ""})
      )}
@@ -48,5 +48,13 @@ defmodule ChatPrototypeWeb.WelcomeLive do
        stage: :rooms_list,
        user_name: user_name
      )}
+  end
+
+  def handle_info(%{event: "new-message", payload: message, topic: room_id} = cenas, socket) do
+    IO.inspect("PARENT")
+    IO.inspect(cenas)
+    send_update(ChatPrototypeWeb.ChatRoomLive, id: room_id, new_message: message)
+
+    {:noreply, socket}
   end
 end

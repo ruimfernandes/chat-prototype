@@ -5,8 +5,26 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
     {:ok,
      assign(socket,
        messages: [%{user: "Chatbot", text: "UserX joinned the room!"}],
-       form: to_form(%{text: ""})
+       form: to_form(%{text: ""}),
+       first_update: true
      )}
+  end
+
+  def update(%{new_message: new_message}, socket) do
+    IO.inspect(new_message, label: "Ggoooooooooooo")
+
+    {:ok,
+     assign(socket,
+       messages: Enum.concat(socket.assigns.messages, [new_message])
+     )}
+  end
+
+  def update(assigns, socket) do
+    IO.inspect(socket)
+    IO.inspect(assigns)
+    subscribe_to_topic(socket.assigns.first_update, assigns.id)
+
+    {:ok, assign(socket, id: assigns.id, first_update: false)}
   end
 
   def render(assigns) do
@@ -36,9 +54,22 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
   end
 
   def handle_event("send_message", %{"text" => text}, socket) do
+    ChatPrototypeWeb.Endpoint.broadcast(socket.assigns.id, "new-message", %{
+      user: "NABO",
+      text: text
+    })
+
     {:noreply,
      assign(socket,
        messages: Enum.concat(socket.assigns.messages, [%{user: "NABO", text: text}])
      )}
+  end
+
+  def subscribe_to_topic(true, id) do
+    ChatPrototypeWeb.Endpoint.subscribe(id)
+  end
+
+  def subscribe_to_topic(false, _id) do
+    :ok
   end
 end
