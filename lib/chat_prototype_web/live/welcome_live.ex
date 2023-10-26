@@ -51,7 +51,17 @@ defmodule ChatPrototypeWeb.WelcomeLive do
   end
 
   def handle_info(%{event: "new-message", payload: message, topic: room_id}, socket) do
-    send_update(ChatPrototypeWeb.ChatRoomLive, id: room_id, new_message: message)
+    send_update(ChatPrototypeWeb.ChatRoomLive, id: room_id, new_messages: [message])
+
+    {:noreply, socket}
+  end
+
+  def handle_info(%{event: "presence_diff", payload: %{joins: joins, leaves: leaves}, topic: room_id}, socket) do
+    join_message = joins |> Map.keys() |> Enum.map(fn username -> %{uuid: UUID.uuid4(), user: username, text: "#{username} joinned the chat."} end)
+
+    leave_message = leaves |> Map.keys() |> Enum.map(fn username -> %{uuid: UUID.uuid4(), user: username, text: "#{username} left the chat."} end)
+
+    send_update(ChatPrototypeWeb.ChatRoomLive, id: room_id, new_messages: Enum.concat(join_message, leave_message))
 
     {:noreply, socket}
   end

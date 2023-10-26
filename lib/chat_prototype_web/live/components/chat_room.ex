@@ -4,18 +4,18 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
   def mount(socket) do
     {:ok,
      assign(socket,
-       messages: [%{uuid: UUID.uuid4(), user: "Chatbot", text: "UserX joinned the room!"}],
+       messages: [],
        form: to_form(%{"text" => ""}),
        first_update: true
      ), temporary_assigns: [messages: []]}
   end
 
-  def update(%{new_message: new_message}, socket) do
-    {:ok, assign(socket, messages: [new_message])}
+  def update(%{new_messages: new_messages}, socket) do
+    {:ok, assign(socket, messages: new_messages)}
   end
 
   def update(assigns, socket) do
-    subscribe_to_topic(socket.assigns.first_update, assigns.id)
+    subscribe_to_topic(socket.assigns.first_update, assigns.id, assigns.user)
 
     {:ok, assign(socket, id: assigns.id, user: assigns.user, first_update: false)}
   end
@@ -56,11 +56,12 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
     {:noreply, socket}
   end
 
-  def subscribe_to_topic(true, id) do
+  def subscribe_to_topic(true, id, user) do
+    ChatPrototypeWeb.Presence.track(self(), id, user, %{})
     ChatPrototypeWeb.Endpoint.subscribe(id)
   end
 
-  def subscribe_to_topic(false, _id) do
+  def subscribe_to_topic(false, _id, _user) do
     :ok
   end
 end

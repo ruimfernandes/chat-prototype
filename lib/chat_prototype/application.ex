@@ -17,7 +17,8 @@ defmodule ChatPrototype.Application do
       # Start a worker by calling: ChatPrototype.Worker.start_link(arg)
       # {ChatPrototype.Worker, arg},
       # Start to serve requests, typically the last entry
-      ChatPrototypeWeb.Endpoint
+      ChatPrototypeWeb.Endpoint,
+      ChatPrototypeWeb.Presence
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
