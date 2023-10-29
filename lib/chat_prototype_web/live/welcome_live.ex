@@ -62,16 +62,17 @@ defmodule ChatPrototypeWeb.WelcomeLive do
     ~H"""
     <div>
       <p class="text-2xl">Feel free to join any chat</p>
-
-      <%= for room <- @all_rooms do %>
-        <%= if room.uuid in @active_rooms do %>
-          <%= room.name %> (already joinned)
-        <% else %>
-          <.button phx-click="join_room" id={room.uuid} phx-value-id={room.uuid}>
-            <%= room.name %>
-          </.button>
+      <div class="flex flex-col gap-4">
+        <%= for room <- @all_rooms do %>
+          <%= if room.uuid in @active_rooms do %>
+            <p><%= room.name %> (already joinned)</p>
+          <% else %>
+            <.button phx-click="join_room" id={room.uuid} phx-value-id={room.uuid}>
+              <%= room.name %>
+            </.button>
+          <% end %>
         <% end %>
-      <% end %>
+      </div>
     </div>
     """
   end
@@ -99,7 +100,6 @@ defmodule ChatPrototypeWeb.WelcomeLive do
   end
 
   def handle_event("join_room", %{"id" => room_uuid}, socket) do
-    IO.inspect("vai join")
     subscribe_room(room_uuid, socket.assigns.active_rooms, socket.assigns.user_name)
 
     {:noreply,
@@ -109,7 +109,6 @@ defmodule ChatPrototypeWeb.WelcomeLive do
   def handle_event("select_room", %{"id" => room_uuid}, socket) do
     selected_room =
       Enum.find(socket.assigns.all_rooms, fn room -> room.uuid == room_uuid end)
-      |> IO.inspect(label: "selected")
 
     # TODO: we need to pull the history
     room_messages = []
@@ -192,14 +191,9 @@ defmodule ChatPrototypeWeb.WelcomeLive do
   end
 
   defp subscribe_room(room_uuid, active_rooms, user_name) do
-    IO.inspect("1")
-
     if(room_uuid not in active_rooms) do
       ChatPrototypeWeb.Endpoint.subscribe(room_uuid)
-      IO.inspect("2")
       ChatPrototypeWeb.Presence.track(self(), room_uuid, user_name, %{})
     end
-
-    IO.inspect("3")
   end
 end
