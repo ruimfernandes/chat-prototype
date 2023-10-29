@@ -16,7 +16,7 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
   end
 
   def update(assigns, socket) do
-    {:ok, assign(socket, id: assigns.id, name: assigns.name, user: assigns.user)}
+    {:ok, assign(socket, name: assigns.name)}
   end
 
   def render(assigns) do
@@ -32,7 +32,7 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
           <% end %>
         </div>
 
-        <.simple_form for={@form} phx-submit="send_message" phx-target={@myself}>
+        <.simple_form for={@form} phx-submit="send_message">
           <div class="flex flex-row gap-2">
             <div class="grow">
               <.input field={@form["text"]} value={@form.params["text"]} />
@@ -43,16 +43,5 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
       </div>
     </div>
     """
-  end
-
-  ## TODO: colocar isto no parent
-  def handle_event("send_message", %{"text" => text}, socket) do
-    ChatPrototypeWeb.Endpoint.broadcast(socket.assigns.id, "new-message", %{
-      uuid: UUID.uuid4(),
-      user: socket.assigns.user,
-      text: text
-    })
-
-    {:noreply, socket}
   end
 end

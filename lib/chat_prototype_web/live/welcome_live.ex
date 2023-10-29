@@ -19,8 +19,6 @@ defmodule ChatPrototypeWeb.WelcomeLive do
      ), temporary_assigns: [messages: []]}
   end
 
-  ## TODO: Special para main room
-
   def render(assigns) do
     case assigns.stage do
       :welcome ->
@@ -49,7 +47,6 @@ defmodule ChatPrototypeWeb.WelcomeLive do
                 module={ChatPrototypeWeb.ChatRoomLive}
                 id={@selected_room.uuid}
                 name={@selected_room.name}
-                user={@user_name}
               />
             <% end %>
           </div>
@@ -123,6 +120,16 @@ defmodule ChatPrototypeWeb.WelcomeLive do
        selected_room: selected_room,
        messages: room_messages
      )}
+  end
+
+  def handle_event("send_message", %{"text" => text}, socket) do
+    ChatPrototypeWeb.Endpoint.broadcast(socket.assigns.selected_room.uuid, "new-message", %{
+      uuid: UUID.uuid4(),
+      user: socket.assigns.user_name,
+      text: text
+    })
+
+    {:noreply, socket}
   end
 
   def handle_info(%{event: "new-message", payload: message, topic: room_id}, socket) do
