@@ -5,6 +5,7 @@ defmodule ChatPrototypeWeb.RoomsListLive do
     {:ok,
      assign(socket,
        rooms: [
+         %{id: "room-0", name: "Welcome", active?: true},
          %{id: "room-1", name: "Football", active?: false},
          %{id: "room-2", name: "Music", active?: false},
          %{id: "room-3", name: "Random", active?: false}
@@ -15,7 +16,7 @@ defmodule ChatPrototypeWeb.RoomsListLive do
 
   def render(assigns) do
     ~H"""
-    <div class="flex flex flex-col">
+    <div class="flex flex-col">
       <p class="text-2xl text-center">Hey <%= @user_name %>! Join any room you want!</p>
       <div class="mt-10 flex flex-col gap-y-4 justify-start">
         <%= for room <- @rooms do %>

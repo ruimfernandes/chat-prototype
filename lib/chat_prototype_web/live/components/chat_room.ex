@@ -4,6 +4,7 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
   def mount(socket) do
     {:ok,
      assign(socket,
+       name: "",
        messages: [],
        form: to_form(%{"text" => ""}),
        first_update: true
@@ -15,15 +16,13 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
   end
 
   def update(assigns, socket) do
-    subscribe_to_topic(socket.assigns.first_update, assigns.id, assigns.user)
-
-    {:ok, assign(socket, id: assigns.id, user: assigns.user, first_update: false)}
+    {:ok, assign(socket, id: assigns.id, name: assigns.name, user: assigns.user)}
   end
 
   def render(assigns) do
     ~H"""
     <div class="flex flex-col border-2 bg-slate-300">
-      <p class="text-2xl bg-slate-400">Room name here!</p>
+      <p class="text-2xl bg-slate-400"><%= @name %> room</p>
       <div class="flex flex-col grow justify-between">
         <div class="p-4" id="chat-messages" phx-update="append">
           <%= for message <- @messages do %>
@@ -46,6 +45,7 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
     """
   end
 
+  ## TODO: colocar isto no parent
   def handle_event("send_message", %{"text" => text}, socket) do
     ChatPrototypeWeb.Endpoint.broadcast(socket.assigns.id, "new-message", %{
       uuid: UUID.uuid4(),
@@ -54,14 +54,5 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
     })
 
     {:noreply, socket}
-  end
-
-  def subscribe_to_topic(true, id, user) do
-    ChatPrototypeWeb.Endpoint.subscribe(id)
-    ChatPrototypeWeb.Presence.track(self(), id, user, %{})
-  end
-
-  def subscribe_to_topic(false, _id, _user) do
-    :ok
   end
 end

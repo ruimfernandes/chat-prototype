@@ -6,9 +6,20 @@ defmodule ChatPrototypeWeb.WelcomeLive do
      assign(socket,
        stage: :rooms_list,
        user_name: get_random_name(),
-       form: to_form(%{"user_name" => ""})
-     )}
+       form: to_form(%{"user_name" => ""}),
+       all_rooms: [
+         %{uuid: "room-0", name: "Main Room"},
+         %{uuid: "room-1", name: "Football"},
+         %{uuid: "room-2", name: "Rugbi"},
+         %{uuid: "room-3", name: "Surf"}
+       ],
+       selected_room: %{uuid: "room-0", name: "Main Room"},
+       active_rooms: ["room-0"],
+       messages: []
+     ), temporary_assigns: [messages: []]}
   end
+
+  ## TODO: Special para main room
 
   def render(assigns) do
     case assigns.stage do
@@ -17,15 +28,52 @@ defmodule ChatPrototypeWeb.WelcomeLive do
 
       :rooms_list ->
         ~H"""
-        <div>
-          <.live_component
-            module={ChatPrototypeWeb.RoomsListLive}
-            id="rooms_list"
-            user_name={assigns.user_name}
-          />
+        <div class="flex flex-row bg-red-500">
+          <div class="flex flex-col gap-8 bg-yellow-500 max-w-s">
+            <%= for room <- filter_active_rooms(assigns) do %>
+              <.button
+                phx-click="select_room"
+                id={room.uuid}
+                phx-value-id={room.uuid}
+                phx-hook="SelectRoom"
+              >
+                <%= room.name %>
+              </.button>
+            <% end %>
+          </div>
+          <div class="bg-green-500 grow">
+            <%= if @selected_room.uuid == "room-0" do %>
+              <.render_main_room assigns={assigns} />
+            <% else %>
+              <.live_component
+                module={ChatPrototypeWeb.ChatRoomLive}
+                id={@selected_room.uuid}
+                name={@selected_room.name}
+                user={@user_name}
+              />
+            <% end %>
+          </div>
         </div>
         """
     end
+  end
+
+  def render_main_room(%{assigns: assigns}) do
+    ~H"""
+    <div>
+      <p class="text-2xl">Feel free to join any chat</p>
+
+      <%= for room <- @all_rooms do %>
+        <%= if room.uuid in @active_rooms do %>
+          <%= room.name %> (already joinned)
+        <% else %>
+          <.button phx-click="join_room" id={room.uuid} phx-value-id={room.uuid}>
+            <%= room.name %>
+          </.button>
+        <% end %>
+      <% end %>
+    </div>
+    """
   end
 
   def render_welcome_menu(assigns) do
@@ -50,18 +98,62 @@ defmodule ChatPrototypeWeb.WelcomeLive do
      )}
   end
 
+  def handle_event("join_room", %{"id" => room_uuid}, socket) do
+    IO.inspect("vai join")
+    subscribe_room(room_uuid, socket.assigns.active_rooms, socket.assigns.user_name)
+
+    {:noreply,
+     assign(socket, active_rooms: Enum.concat(socket.assigns.active_rooms, [room_uuid]))}
+  end
+
+  def handle_event("select_room", %{"id" => room_uuid}, socket) do
+    selected_room =
+      Enum.find(socket.assigns.all_rooms, fn room -> room.uuid == room_uuid end)
+      |> IO.inspect(label: "selected")
+
+    # TODO: we need to pull the history
+    room_messages = []
+
+    send_update(ChatPrototypeWeb.ChatRoomLive,
+      id: selected_room.uuid,
+      new_messages: room_messages
+    )
+
+    {:noreply,
+     assign(socket,
+       selected_room: selected_room,
+       messages: room_messages
+     )}
+  end
+
   def handle_info(%{event: "new-message", payload: message, topic: room_id}, socket) do
     send_update(ChatPrototypeWeb.ChatRoomLive, id: room_id, new_messages: [message])
 
     {:noreply, socket}
   end
 
-  def handle_info(%{event: "presence_diff", payload: %{joins: joins, leaves: leaves}, topic: room_id}, socket) do
-    join_message = joins |> Map.keys() |> Enum.map(fn username -> %{uuid: UUID.uuid4(), user: username, text: "#{username} joinned the chat."} end)
+  def handle_info(
+        %{event: "presence_diff", payload: %{joins: joins, leaves: leaves}, topic: room_id},
+        socket
+      ) do
+    join_message =
+      joins
+      |> Map.keys()
+      |> Enum.map(fn username ->
+        %{uuid: UUID.uuid4(), user: username, text: "#{username} joinned the chat."}
+      end)
 
-    leave_message = leaves |> Map.keys() |> Enum.map(fn username -> %{uuid: UUID.uuid4(), user: username, text: "#{username} left the chat."} end)
+    leave_message =
+      leaves
+      |> Map.keys()
+      |> Enum.map(fn username ->
+        %{uuid: UUID.uuid4(), user: username, text: "#{username} left the chat."}
+      end)
 
-    send_update(ChatPrototypeWeb.ChatRoomLive, id: room_id, new_messages: Enum.concat(join_message, leave_message))
+    send_update(ChatPrototypeWeb.ChatRoomLive,
+      id: room_id,
+      new_messages: Enum.concat(join_message, leave_message)
+    )
 
     {:noreply, socket}
   end
@@ -93,5 +185,21 @@ defmodule ChatPrototypeWeb.WelcomeLive do
     random_index = :rand.uniform(20) - 1
 
     Enum.at(names_list, random_index)
+  end
+
+  defp filter_active_rooms(assigns) do
+    Enum.filter(assigns.all_rooms, fn room -> room.uuid in assigns.active_rooms end)
+  end
+
+  defp subscribe_room(room_uuid, active_rooms, user_name) do
+    IO.inspect("1")
+
+    if(room_uuid not in active_rooms) do
+      ChatPrototypeWeb.Endpoint.subscribe(room_uuid)
+      IO.inspect("2")
+      ChatPrototypeWeb.Presence.track(self(), room_uuid, user_name, %{})
+    end
+
+    IO.inspect("3")
   end
 end
