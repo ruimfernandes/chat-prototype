@@ -26,7 +26,6 @@ let Hooks = {}
 Hooks.SelectRoom = {
   mounted() {
     this.el.addEventListener("click", e => {
-      console.log("aaaaaaaaaa")
       document.getElementById("chat-messages").innerHTML = ""
     })
   }
