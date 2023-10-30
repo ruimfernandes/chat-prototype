@@ -13,10 +13,9 @@ defmodule ChatPrototypeWeb.WelcomeLive do
          %{uuid: "room-2", name: "Rugbi"},
          %{uuid: "room-3", name: "Surf"}
        ],
-       selected_room: %{uuid: "room-0", name: "Main Room"},
-       active_rooms: ["room-0"],
-       messages: []
-     ), temporary_assigns: [messages: []]}
+       selected_room: %{uuid: "room-0", name: "Main Room", unread_messages_count: 0},
+       active_rooms: [%{uuid: "room-0", name: "Main Room", unread_messages_count: 0}]
+     )}
   end
 
   def render(assigns) do
@@ -28,14 +27,14 @@ defmodule ChatPrototypeWeb.WelcomeLive do
         ~H"""
         <div class="flex flex-row bg-red-500">
           <div class="flex flex-col gap-8 bg-yellow-500 max-w-s">
-            <%= for room <- filter_active_rooms(assigns) do %>
+            <%= for room <- @active_rooms do %>
               <.button
                 phx-click="select_room"
-                id={room.uuid}
+                id={"menu-#{room.uuid}"}
                 phx-value-id={room.uuid}
                 phx-hook="SelectRoom"
               >
-                <%= room.name %>
+                <%= room.name %> <%= show_unread_messages_count(assigns, room.unread_messages_count) %>
               </.button>
             <% end %>
           </div>
@@ -61,10 +60,10 @@ defmodule ChatPrototypeWeb.WelcomeLive do
       <p class="text-2xl">Feel free to join any chat</p>
       <div class="flex flex-col gap-4">
         <%= for room <- @all_rooms do %>
-          <%= if room.uuid in @active_rooms do %>
+          <%= if is_uuid_in_rooms_list?(@active_rooms, room.uuid) do %>
             <p><%= room.name %> (already joinned)</p>
           <% else %>
-            <.button phx-click="join_room" id={room.uuid} phx-value-id={room.uuid}>
+            <.button phx-click="join_room" id={"join-#{room.uuid}"} phx-value-id={room.uuid}>
               <%= room.name %>
             </.button>
           <% end %>
@@ -88,6 +87,14 @@ defmodule ChatPrototypeWeb.WelcomeLive do
     """
   end
 
+  def show_unread_messages_count(_assigns, 0), do: ""
+
+  def show_unread_messages_count(assigns, amount) do
+    ~H"""
+    - <%= amount %>
+    """
+  end
+
   def handle_event("sign_in", %{"user_name" => user_name}, socket) do
     {:noreply,
      assign(socket,
@@ -97,29 +104,34 @@ defmodule ChatPrototypeWeb.WelcomeLive do
   end
 
   def handle_event("join_room", %{"id" => room_uuid}, socket) do
-    subscribe_room(room_uuid, socket.assigns.active_rooms, socket.assigns.user_name)
+    active_room =
+      find_room_in_rooms_list(socket.assigns.all_rooms, room_uuid)
+      |> Map.merge(%{unread_messages_count: 0})
 
-    {:noreply,
-     assign(socket, active_rooms: Enum.concat(socket.assigns.active_rooms, [room_uuid]))}
+    new_active_rooms_list = Enum.concat(socket.assigns.active_rooms, [active_room])
+
+    subscribe_room(room_uuid, new_active_rooms_list, socket.assigns.user_name)
+
+    {:noreply, assign(socket, active_rooms: new_active_rooms_list)}
   end
 
-  def handle_event("select_room", %{"id" => room_uuid}, socket) do
+  def handle_event("select_room", %{"id" => room_id}, socket) do
     selected_room =
-      Enum.find(socket.assigns.all_rooms, fn room -> room.uuid == room_uuid end)
+      find_room_in_rooms_list(socket.assigns.active_rooms, room_id)
 
-    # TODO: we need to pull the history
-    room_messages = []
+    active_rooms =
+      Enum.map(socket.assigns.active_rooms, fn room ->
+        if room.uuid == room_id do
+          %{room | unread_messages_count: 0}
+        else
+          room
+        end
+      end)
 
-    send_update(ChatPrototypeWeb.ChatRoomLive,
-      id: selected_room.uuid,
-      new_messages: room_messages
-    )
+    # TODO: we need to pull the history and send update
+    # room_messages = []
 
-    {:noreply,
-     assign(socket,
-       selected_room: selected_room,
-       messages: room_messages
-     )}
+    {:noreply, assign(socket, active_rooms: active_rooms, selected_room: selected_room)}
   end
 
   def handle_event("send_message", %{"text" => text}, socket) do
@@ -133,9 +145,22 @@ defmodule ChatPrototypeWeb.WelcomeLive do
   end
 
   def handle_info(%{event: "new-message", payload: message, topic: room_id}, socket) do
-    send_update(ChatPrototypeWeb.ChatRoomLive, id: room_id, new_messages: [message])
+    if socket.assigns.selected_room.uuid == room_id do
+      send_update(ChatPrototypeWeb.ChatRoomLive, id: room_id, new_messages: [message])
+      {:noreply, socket}
+    else
+      active_rooms =
+        Enum.map(socket.assigns.active_rooms, fn room ->
+          if room.uuid == room_id do
+            unread_messages_count = room.unread_messages_count + 1
+            %{room | unread_messages_count: unread_messages_count}
+          else
+            room
+          end
+        end)
 
-    {:noreply, socket}
+      {:noreply, assign(socket, active_rooms: active_rooms)}
+    end
   end
 
   def handle_info(
@@ -193,14 +218,18 @@ defmodule ChatPrototypeWeb.WelcomeLive do
     Enum.at(names_list, random_index)
   end
 
-  defp filter_active_rooms(assigns) do
-    Enum.filter(assigns.all_rooms, fn room -> room.uuid in assigns.active_rooms end)
-  end
-
   defp subscribe_room(room_uuid, active_rooms, user_name) do
-    if(room_uuid not in active_rooms) do
+    if(is_uuid_in_rooms_list?(active_rooms, room_uuid)) do
       ChatPrototypeWeb.Endpoint.subscribe(room_uuid)
       ChatPrototypeWeb.Presence.track(self(), room_uuid, user_name, %{})
     end
+  end
+
+  defp find_room_in_rooms_list(list, uuid) do
+    Enum.find(list, fn room -> room.uuid == uuid end)
+  end
+
+  defp is_uuid_in_rooms_list?(list, uuid) do
+    Enum.any?(list, fn room -> room.uuid == uuid end)
   end
 end
