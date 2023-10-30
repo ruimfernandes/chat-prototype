@@ -1,6 +1,7 @@
 defmodule ChatPrototypeWeb.ChatRoomLive do
   use ChatPrototypeWeb, :live_component
 
+  @impl true
   def mount(socket) do
     {:ok,
      assign(socket,
@@ -11,6 +12,7 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
      ), temporary_assigns: [messages: []]}
   end
 
+  @impl true
   def update(%{new_messages: new_messages}, socket) do
     {:ok, assign(socket, messages: new_messages)}
   end
@@ -19,6 +21,7 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
     {:ok, assign(socket, name: assigns.name)}
   end
 
+  @impl true
   def render(assigns) do
     ~H"""
     <div class="flex flex-col border-2 bg-slate-300">

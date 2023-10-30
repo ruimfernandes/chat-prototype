@@ -1,6 +1,7 @@
 defmodule ChatPrototypeWeb.WelcomeLive do
   use ChatPrototypeWeb, :live_view
 
+  @impl true
   def mount(_params, _session, socket) do
     {:ok,
      assign(socket,
@@ -18,6 +19,7 @@ defmodule ChatPrototypeWeb.WelcomeLive do
      )}
   end
 
+  @impl true
   def render(assigns) do
     case assigns.stage do
       :welcome ->
@@ -54,47 +56,7 @@ defmodule ChatPrototypeWeb.WelcomeLive do
     end
   end
 
-  def render_main_room(%{assigns: assigns}) do
-    ~H"""
-    <div>
-      <p class="text-2xl">Feel free to join any chat</p>
-      <div class="flex flex-col gap-4">
-        <%= for room <- @all_rooms do %>
-          <%= if is_uuid_in_rooms_list?(@active_rooms, room.uuid) do %>
-            <p><%= room.name %> (already joinned)</p>
-          <% else %>
-            <.button phx-click="join_room" id={"join-#{room.uuid}"} phx-value-id={room.uuid}>
-              <%= room.name %>
-            </.button>
-          <% end %>
-        <% end %>
-      </div>
-    </div>
-    """
-  end
-
-  def render_welcome_menu(assigns) do
-    ~H"""
-    <div>
-      <p class="text-2xl">Welcome to chat</p>
-
-      <.simple_form class="mt-40" for={@form} phx-submit="sign_in">
-        <b> Please set your username </b>
-        <p>User name: <.input field={@form["user_name"]} value={@form.params["user_name"]} /></p>
-        <.button>Sign in</.button>
-      </.simple_form>
-    </div>
-    """
-  end
-
-  def show_unread_messages_count(_assigns, 0), do: ""
-
-  def show_unread_messages_count(assigns, amount) do
-    ~H"""
-    - <%= amount %>
-    """
-  end
-
+  @impl true
   def handle_event("sign_in", %{"user_name" => user_name}, socket) do
     {:noreply,
      assign(socket,
@@ -144,6 +106,7 @@ defmodule ChatPrototypeWeb.WelcomeLive do
     {:noreply, socket}
   end
 
+  @impl true
   def handle_info(%{event: "new-message", payload: message, topic: room_id}, socket) do
     if socket.assigns.selected_room.uuid == room_id do
       send_update(ChatPrototypeWeb.ChatRoomLive, id: room_id, new_messages: [message])
@@ -189,7 +152,48 @@ defmodule ChatPrototypeWeb.WelcomeLive do
     {:noreply, socket}
   end
 
-  def get_random_name() do
+  defp render_main_room(%{assigns: assigns}) do
+    ~H"""
+    <div>
+      <p class="text-2xl">Feel free to join any chat</p>
+      <div class="flex flex-col gap-4">
+        <%= for room <- @all_rooms do %>
+          <%= if is_uuid_in_rooms_list?(@active_rooms, room.uuid) do %>
+            <p><%= room.name %> (already joinned)</p>
+          <% else %>
+            <.button phx-click="join_room" id={"join-#{room.uuid}"} phx-value-id={room.uuid}>
+              <%= room.name %>
+            </.button>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+    """
+  end
+
+  defp render_welcome_menu(assigns) do
+    ~H"""
+    <div>
+      <p class="text-2xl">Welcome to chat</p>
+
+      <.simple_form class="mt-40" for={@form} phx-submit="sign_in">
+        <b> Please set your username </b>
+        <p>User name: <.input field={@form["user_name"]} value={@form.params["user_name"]} /></p>
+        <.button>Sign in</.button>
+      </.simple_form>
+    </div>
+    """
+  end
+
+  defp show_unread_messages_count(_assigns, 0), do: ""
+
+  defp show_unread_messages_count(assigns, amount) do
+    ~H"""
+    - <%= amount %>
+    """
+  end
+
+  defp get_random_name() do
     names_list = [
       "Maria",
       "Alice",
