@@ -31,8 +31,8 @@ defmodule ChatPrototypeWeb.WelcomeLive do
 
       :rooms_list ->
         ~H"""
-        <div class="flex flex-row bg-red-500">
-          <div class="flex flex-col gap-8 bg-zinc-800 max-w-s p-2">
+        <div class="flex flex-row flex-1">
+          <div class="flex flex-col gap-8 bg-zinc-800 max-w-s p-2 py-10">
             <%= for room <- @active_rooms do %>
               <.button
                 class="menu-button"

@@ -1,3 +1,13 @@
+html, body, .phx-connected {
+    height: 100%;
+}
+
+.full-screen {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
 .menu-button {
     font-size: x-small;
     height: 60px;
