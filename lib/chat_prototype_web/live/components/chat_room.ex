@@ -2,17 +2,18 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
   use ChatPrototypeWeb, :live_component
 
   @impl true
+  @spec mount(Socket.t()) :: {:ok, Socket.t()}
   def mount(socket) do
     {:ok,
      assign(socket,
        name: "",
        messages: [],
-       form: to_form(%{"text" => ""}),
-       first_update: true
+       form: to_form(%{"text" => ""})
      ), temporary_assigns: [messages: []]}
   end
 
   @impl true
+  @spec update(map(), Socket.t()) :: {:ok, Socket.t()}
   def update(%{new_messages: new_messages}, socket) do
     {:ok, assign(socket, messages: new_messages)}
   end
@@ -22,6 +23,7 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
   end
 
   @impl true
+  @spec render(Socket.assigns()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
     <div class="flex flex-col border-2 bg-slate-300">
@@ -35,7 +37,7 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
           <% end %>
         </div>
 
-        <.simple_form for={@form} phx-submit="send_message">
+        <.simple_form id="chat_room" for={@form} phx-submit="send_message">
           <div class="flex flex-row gap-2">
             <div class="grow">
               <.input field={@form["text"]} value={@form.params["text"]} />
