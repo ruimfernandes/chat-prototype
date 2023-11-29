@@ -1,4 +1,4 @@
-defmodule ChatPrototypeWeb.ChatRoomLive do
+defmodule ChatPrototypeWeb.ChatRoomComponent do
   use ChatPrototypeWeb, :live_component
 
   @impl true
@@ -26,8 +26,8 @@ defmodule ChatPrototypeWeb.ChatRoomLive do
   @spec render(Socket.assigns()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
-    <div class="flex flex-col border-2 bg-slate-300">
-      <p class="text-2xl bg-slate-400"><%= @name %> room</p>
+    <div class="flex flex-col text-gray-100">
+      <p class="text-4xl border-b-2"><%= @name %> room</p>
       <div class="flex flex-col grow justify-between">
         <div class="p-4" id="chat-messages" phx-update="append">
           <%= for message <- @messages do %>

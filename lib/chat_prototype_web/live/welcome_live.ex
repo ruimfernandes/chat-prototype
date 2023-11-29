@@ -1,15 +1,19 @@
 defmodule ChatPrototypeWeb.WelcomeLive do
   use ChatPrototypeWeb, :live_view
 
+  import ChatPrototypeWeb.ChatMenuComponent
+  import ChatPrototypeWeb.MainRoomComponent
+  import ChatPrototypeWeb.WelcomeMenuComponent
+
   @impl true
   @spec mount(map(), map(), Socket.t()) :: {:ok, Socket.t()}
   def mount(_params, _session, socket) do
     {:ok,
      assign(socket,
-       stage: :rooms_list,
-       user_name: get_random_name(),
-       #  stage: :welcome,
-       #  user_name: "",
+       #  stage: :rooms_list,
+       #  user_name: get_random_name(),
+       stage: :welcome,
+       user_name: "",
        form: to_form(%{"user_name" => ""}),
        all_rooms: [
          %{uuid: "room-0", name: "Main Room"},
@@ -27,30 +31,21 @@ defmodule ChatPrototypeWeb.WelcomeLive do
   def render(assigns) do
     case assigns.stage do
       :welcome ->
-        render_welcome_menu(assigns)
+        ~H"""
+        <.render_welcome_menu form={@form} />
+        """
 
       :rooms_list ->
         ~H"""
         <div class="flex flex-row flex-1">
-          <div class="flex flex-col gap-8 bg-zinc-800 max-w-s p-2 py-10">
-            <%= for room <- @active_rooms do %>
-              <.button
-                class="menu-button"
-                id={"menu-#{room.uuid}"}
-                phx-click="select_room"
-                phx-hook="SelectRoom"
-                phx-value-id={room.uuid}
-              >
-                <%= room.name %> <%= show_unread_messages_count(assigns, room.unread_messages_count) %>
-              </.button>
-            <% end %>
-          </div>
-          <div class="bg-zinc-600 grow p-10">
+          <.render_chat_menu active_rooms={@active_rooms} />
+
+          <div class="bg-zinc-700 grow p-10">
             <%= if @selected_room.uuid == "room-0" do %>
-              <.render_main_room assigns={assigns} />
+              <.render_main_room active_rooms={@active_rooms} all_rooms={@all_rooms} />
             <% else %>
               <.live_component
-                module={ChatPrototypeWeb.ChatRoomLive}
+                module={ChatPrototypeWeb.ChatRoomComponent}
                 id={@selected_room.uuid}
                 name={@selected_room.name}
               />
@@ -123,7 +118,7 @@ defmodule ChatPrototypeWeb.WelcomeLive do
         ) :: {:noreply, Socket.t()}
   def handle_info(%{event: "new-message", payload: message, topic: room_id}, socket) do
     if socket.assigns.selected_room.uuid == room_id do
-      send_update(ChatPrototypeWeb.ChatRoomLive, id: room_id, new_messages: [message])
+      send_update(ChatPrototypeWeb.ChatRoomComponent, id: room_id, new_messages: [message])
       {:noreply, socket}
     else
       active_rooms =
@@ -158,57 +153,12 @@ defmodule ChatPrototypeWeb.WelcomeLive do
         %{uuid: UUID.uuid4(), user: username, text: "#{username} left the chat."}
       end)
 
-    send_update(ChatPrototypeWeb.ChatRoomLive,
+    send_update(ChatPrototypeWeb.ChatRoomComponent,
       id: room_id,
       new_messages: Enum.concat(join_message, leave_message)
     )
 
     {:noreply, socket}
-  end
-
-  @spec render_main_room(Socket.assigns()) :: Phoenix.LiveView.Rendered.t()
-  defp render_main_room(%{assigns: assigns}) do
-    ~H"""
-    <div>
-      <p class="text-4xl">Welcome to this chat app!</p>
-      <p class="text-xl mt-4">Feel free to join any of the rooms below</p>
-      <div id="main-room" class="flex flex-col gap-4 mt-4">
-        <%= for room <- @all_rooms do %>
-          <%= if is_uuid_in_rooms_list?(@active_rooms, room.uuid) do %>
-            <p><%= room.name %> (already joinned)</p>
-          <% else %>
-            <.button phx-click="join_room" id={"join-#{room.uuid}"} phx-value-id={room.uuid}>
-              <%= room.name %>
-            </.button>
-          <% end %>
-        <% end %>
-      </div>
-    </div>
-    """
-  end
-
-  @spec render_welcome_menu(Socket.assigns()) :: Phoenix.LiveView.Rendered.t()
-  defp render_welcome_menu(assigns) do
-    ~H"""
-    <div>
-      <p class="text-2xl">Welcome to chat</p>
-
-      <.simple_form id="login_form" class="mt-40" for={@form} phx-submit="sign_in">
-        <b>Please set your username</b>
-        <p>User name: <.input field={@form["user_name"]} value={@form.params["user_name"]} /></p>
-        <.button>Sign in</.button>
-      </.simple_form>
-    </div>
-    """
-  end
-
-  @spec show_unread_messages_count(Socket.assigns(), number()) :: Phoenix.LiveView.Rendered.t()
-  defp show_unread_messages_count(_assigns, 0), do: ""
-
-  defp show_unread_messages_count(assigns, amount) do
-    ~H"""
-    - <%= amount %>
-    """
   end
 
   @spec get_random_name() :: String.t()
@@ -254,7 +204,7 @@ defmodule ChatPrototypeWeb.WelcomeLive do
     Enum.find(list, fn room -> room.uuid == uuid end)
   end
 
-  @spec find_room_in_rooms_list(list(), String.t()) :: boolean()
+  @spec is_uuid_in_rooms_list?(list(), String.t()) :: boolean()
   defp is_uuid_in_rooms_list?(list, uuid) do
     Enum.any?(list, fn room -> room.uuid == uuid end)
   end
