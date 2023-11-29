@@ -64,25 +64,22 @@ defmodule ChatPrototypeWeb.WelcomeLive do
      )}
   end
 
-  def handle_event("join_room", %{"id" => room_uuid}, socket) do
+  def handle_event("join_room", %{"id" => room_uuid}, %{assigns: assigns} = socket) do
     active_room =
-      socket.assigns.all_rooms
-      |> find_room_in_rooms_list(room_uuid)
-      |> Map.merge(%{unread_messages_count: 0})
+      assigns.all_rooms |> find_room_in_list(room_uuid) |> Map.merge(%{unread_messages_count: 0})
 
-    new_active_rooms_list = Enum.concat(socket.assigns.active_rooms, [active_room])
+    new_active_rooms_list = Enum.concat(assigns.active_rooms, [active_room])
 
-    subscribe_room(room_uuid, new_active_rooms_list, socket.assigns.user_name)
+    subscribe_room(room_uuid, new_active_rooms_list, assigns.user_name)
 
     {:noreply, assign(socket, active_rooms: new_active_rooms_list)}
   end
 
-  def handle_event("select_room", %{"id" => room_id}, socket) do
-    selected_room =
-      find_room_in_rooms_list(socket.assigns.active_rooms, room_id)
+  def handle_event("select_room", %{"id" => room_id}, %{assigns: assigns} = socket) do
+    selected_room = find_room_in_list(assigns.active_rooms, room_id)
 
     active_rooms =
-      Enum.map(socket.assigns.active_rooms, fn room ->
+      Enum.map(assigns.active_rooms, fn room ->
         if room.uuid == room_id do
           %{room | unread_messages_count: 0}
         else
@@ -192,19 +189,16 @@ defmodule ChatPrototypeWeb.WelcomeLive do
 
   @spec subscribe_room(String.t(), list(), String.t()) :: any()
   defp subscribe_room(room_uuid, active_rooms, user_name) do
-    if(is_uuid_in_rooms_list?(active_rooms, room_uuid)) do
+    active_rooms
+    |> Enum.any?(fn room -> room.uuid == room_uuid end)
+    |> if do
       ChatPrototypeWeb.Endpoint.subscribe(room_uuid)
       ChatPrototypeWeb.Presence.track(self(), room_uuid, user_name, %{})
     end
   end
 
-  @spec find_room_in_rooms_list(list(), String.t()) :: String.t() | nil
-  defp find_room_in_rooms_list(list, uuid) do
+  @spec find_room_in_list(list(), String.t()) :: map()
+  defp find_room_in_list(list, uuid) do
     Enum.find(list, fn room -> room.uuid == uuid end)
-  end
-
-  @spec is_uuid_in_rooms_list?(list(), String.t()) :: boolean()
-  defp is_uuid_in_rooms_list?(list, uuid) do
-    Enum.any?(list, fn room -> room.uuid == uuid end)
   end
 end
