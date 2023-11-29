@@ -4,7 +4,7 @@ defmodule ChatPrototypeWeb.MainRoomComponent do
   @spec render_main_room(Socket.assigns()) :: Phoenix.LiveView.Rendered.t()
   def render_main_room(assigns) do
     ~H"""
-    <div class="text-gray-100">
+    <div class="bg-zinc-700 grow p-10 text-gray-100">
       <p class="text-4xl border-b-2">Welcome to this chat app!</p>
       <p class="text-xl mt-4">Feel free to join any of the rooms below</p>
       <div id="main-room" class="flex flex-col gap-4 mt-4">
