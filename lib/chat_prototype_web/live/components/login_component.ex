@@ -1,8 +1,8 @@
-defmodule ChatPrototypeWeb.WelcomeMenuComponent do
+defmodule ChatPrototypeWeb.LoginComponent do
   use ChatPrototypeWeb, :html
 
-  @spec render_welcome_menu(Socket.assigns()) :: Phoenix.LiveView.Rendered.t()
-  def render_welcome_menu(assigns) do
+  @spec render_login(Socket.assigns()) :: Phoenix.LiveView.Rendered.t()
+  def render_login(assigns) do
     ~H"""
     <div>
       <p class="text-2xl">Welcome to chat</p>

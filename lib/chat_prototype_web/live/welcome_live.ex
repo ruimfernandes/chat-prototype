@@ -3,17 +3,17 @@ defmodule ChatPrototypeWeb.WelcomeLive do
 
   import ChatPrototypeWeb.ChatMenuComponent
   import ChatPrototypeWeb.MainRoomComponent
-  import ChatPrototypeWeb.WelcomeMenuComponent
+  import ChatPrototypeWeb.LoginComponent
 
   @impl true
   @spec mount(map(), map(), Socket.t()) :: {:ok, Socket.t()}
   def mount(_params, _session, socket) do
     {:ok,
      assign(socket,
-       #  stage: :rooms_list,
-       #  user_name: get_random_name(),
-       stage: :welcome,
-       user_name: "",
+       stage: :rooms_list,
+       user_name: get_random_name(),
+       #  stage: :welcome,
+       #  user_name: "",
        form: to_form(%{"user_name" => ""}),
        all_rooms: [
          %{uuid: "room-0", name: "Main Room"},
@@ -32,7 +32,7 @@ defmodule ChatPrototypeWeb.WelcomeLive do
     case assigns.stage do
       :welcome ->
         ~H"""
-        <.render_welcome_menu form={@form} />
+        <.render_login form={@form} />
         """
 
       :rooms_list ->
@@ -40,17 +40,15 @@ defmodule ChatPrototypeWeb.WelcomeLive do
         <div class="flex flex-row flex-1">
           <.render_chat_menu active_rooms={@active_rooms} />
 
-          <div class="bg-zinc-700 grow p-10">
-            <%= if @selected_room.uuid == "room-0" do %>
-              <.render_main_room active_rooms={@active_rooms} all_rooms={@all_rooms} />
-            <% else %>
-              <.live_component
-                module={ChatPrototypeWeb.ChatRoomComponent}
-                id={@selected_room.uuid}
-                name={@selected_room.name}
-              />
-            <% end %>
-          </div>
+          <%= if @selected_room.uuid == "room-0" do %>
+            <.render_main_room active_rooms={@active_rooms} all_rooms={@all_rooms} />
+          <% else %>
+            <.live_component
+              module={ChatPrototypeWeb.ChatRoomComponent}
+              id={@selected_room.uuid}
+              name={@selected_room.name}
+            />
+          <% end %>
         </div>
         """
     end
@@ -68,7 +66,8 @@ defmodule ChatPrototypeWeb.WelcomeLive do
 
   def handle_event("join_room", %{"id" => room_uuid}, socket) do
     active_room =
-      find_room_in_rooms_list(socket.assigns.all_rooms, room_uuid)
+      socket.assigns.all_rooms
+      |> find_room_in_rooms_list(room_uuid)
       |> Map.merge(%{unread_messages_count: 0})
 
     new_active_rooms_list = Enum.concat(socket.assigns.active_rooms, [active_room])
