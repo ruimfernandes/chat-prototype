@@ -6,26 +6,27 @@ defmodule ChatPrototypeWeb.ChatMenuComponent do
     ~H"""
     <div class="flex flex-col gap-8 bg-zinc-800 max-w-s p-2 py-10">
       <%= for room <- @active_rooms do %>
-        <.button
-          class="menu-button"
-          id={"menu-#{room.uuid}"}
-          phx-click="select_room"
-          phx-hook="SelectRoom"
-          phx-value-id={room.uuid}
-        >
-          <%= room.name %> <%= show_unread_messages_count(assigns, room.unread_messages_count) %>
-        </.button>
+        <div class="relative">
+          <.button
+            class="menu-button"
+            id={"menu-#{room.uuid}"}
+            phx-click="select_room"
+            phx-hook="SelectRoom"
+            phx-value-id={room.uuid}
+          >
+            <%= room.name %>
+          </.button>
+
+          <div class={"button-unread-message #{set_visibility(room.unread_messages_count)}"}>
+            <%= room.unread_messages_count %>
+          </div>
+        </div>
       <% end %>
     </div>
     """
   end
 
-  @spec show_unread_messages_count(Socket.assigns(), number()) :: Phoenix.LiveView.Rendered.t()
-  defp show_unread_messages_count(_assigns, 0), do: ""
-
-  defp show_unread_messages_count(assigns, amount) do
-    ~H"""
-    - <%= amount %>
-    """
-  end
+  @spec set_visibility(number()) :: String.t()
+  defp set_visibility(0), do: "invisible"
+  defp set_visibility(_value), do: "visible"
 end
