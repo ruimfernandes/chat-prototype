@@ -18,7 +18,9 @@ defmodule ChatPrototype.Application do
       # {ChatPrototype.Worker, arg},
       # Start to serve requests, typically the last entry
       ChatPrototypeWeb.Endpoint,
-      ChatPrototypeWeb.Presence
+      ChatPrototypeWeb.Presence,
+      ChatPrototype.Server,
+      ChatPrototype.ProcessRegistry
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

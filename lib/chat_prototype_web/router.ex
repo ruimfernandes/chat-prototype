@@ -20,10 +20,11 @@ defmodule ChatPrototypeWeb.Router do
     live "/", WelcomeLive, :home
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", ChatPrototypeWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", ChatPrototypeWeb do
+    pipe_through :api
+
+    resources "/rooms", RoomController, only: [:index, :create]
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:chat_prototype, :dev_routes) do
