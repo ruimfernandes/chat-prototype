@@ -18,6 +18,7 @@ defmodule ChatPrototype.Server do
     end
   end
 
+  @spec list_rooms() :: list()
   def list_rooms() do
     __MODULE__
     |> DynamicSupervisor.which_children()

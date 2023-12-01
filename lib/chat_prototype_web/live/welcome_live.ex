@@ -5,9 +5,24 @@ defmodule ChatPrototypeWeb.WelcomeLive do
   import ChatPrototypeWeb.MainRoomComponent
   import ChatPrototypeWeb.LoginComponent
 
+  alias ChatPrototype.Server
+  alias ChatPrototype.Server.Room
+
   @impl true
   @spec mount(map(), map(), Socket.t()) :: {:ok, Socket.t()}
   def mount(_params, _session, socket) do
+    main_room = %{uuid: "room-0", name: "Main Room"}
+
+    rooms =
+      Server.list_rooms()
+      |> Enum.with_index(1)
+      |> Enum.map(fn {room, _index} ->
+        %{uuid: room.name, name: room.name}
+      end)
+      |> IO.inspect()
+
+    all_rooms = Enum.concat([main_room], rooms)
+
     {:ok,
      assign(socket,
        stage: :rooms_list,
@@ -15,12 +30,14 @@ defmodule ChatPrototypeWeb.WelcomeLive do
        #  stage: :welcome,
        #  user_name: "",
        form: to_form(%{"user_name" => ""}),
-       all_rooms: [
-         %{uuid: "room-0", name: "Main Room"},
-         %{uuid: "room-1", name: "Football"},
-         %{uuid: "room-2", name: "Rugbi"},
-         %{uuid: "room-3", name: "Surf"}
-       ],
+       all_rooms: all_rooms,
+       #  [
+       #    %{uuid: "room-0", name: "Main Room"},
+       #    %{uuid: "room-1", name: "Football"},
+       #    %{uuid: "room-2", name: "Rugbi"},
+       #    %{uuid: "room-3", name: "Surf"}
+       #  ]
+       # ,
        selected_room: %{uuid: "room-0", name: "Main Room", unread_messages_count: 0},
        active_rooms: [%{uuid: "room-0", name: "Main Room", unread_messages_count: 0}]
      )}
@@ -70,7 +87,9 @@ defmodule ChatPrototypeWeb.WelcomeLive do
 
     new_active_rooms_list = Enum.concat(assigns.active_rooms, [active_room])
 
-    subscribe_room(room_uuid, new_active_rooms_list, assigns.user_name)
+    # subscribe_room(room_uuid, new_active_rooms_list, assigns.user_name)
+    # TODO FIX THIS
+    subscribe_room(active_room.name, new_active_rooms_list, assigns.user_name)
 
     {:noreply, assign(socket, active_rooms: new_active_rooms_list)}
   end
@@ -87,14 +106,18 @@ defmodule ChatPrototypeWeb.WelcomeLive do
         end
       end)
 
-    # TODO: we need to pull the history and send update
-    # room_messages = []
+    if room_id != "room-0" do
+      room_messages = Room.get_messages(selected_room.name)
+      send_update(ChatPrototypeWeb.ChatRoomComponent, id: room_id, new_messages: room_messages)
+    end
 
     {:noreply, assign(socket, active_rooms: active_rooms, selected_room: selected_room)}
   end
 
   def handle_event("send_message", %{"text" => text}, socket) do
-    ChatPrototypeWeb.Endpoint.broadcast(socket.assigns.selected_room.uuid, "new-message", %{
+    # ChatPrototypeWeb.Endpoint.broadcast(socket.assigns.selected_room.uuid, "new-message", %{
+    # TODO fix it
+    ChatPrototypeWeb.Endpoint.broadcast(socket.assigns.selected_room.name, "new-message", %{
       uuid: UUID.uuid4(),
       user: socket.assigns.user_name,
       text: text
@@ -189,9 +212,12 @@ defmodule ChatPrototypeWeb.WelcomeLive do
 
   @spec subscribe_room(String.t(), list(), String.t()) :: any()
   defp subscribe_room(room_uuid, active_rooms, user_name) do
+    IO.inspect(room_uuid, label: "room_uuid")
+
     active_rooms
-    |> Enum.any?(fn room -> room.uuid == room_uuid end)
+    |> Enum.any?(fn room -> room.name == room_uuid end) # TODO fix it
     |> if do
+      IO.inspect(room_uuid, label: "liveview subscribed")
       ChatPrototypeWeb.Endpoint.subscribe(room_uuid)
       ChatPrototypeWeb.Presence.track(self(), room_uuid, user_name, %{})
     end
