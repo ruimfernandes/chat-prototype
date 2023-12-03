@@ -26,7 +26,7 @@ defmodule ChatPrototypeWeb.ChatRoomComponent do
   @spec render(Socket.assigns()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
-    <div class="flex flex-col grow p-10 bg-zinc-700 text-gray-100">
+    <div class="flex flex-col grow p-10 bg-zinc-600 text-gray-100">
       <p class="text-4xl border-b-2"><%= @name %> room</p>
       <div class="flex flex-col grow justify-between">
         <div class="p-4" id="chat-messages" phx-update="append">
