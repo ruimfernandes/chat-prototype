@@ -13,16 +13,12 @@ defmodule ChatPrototypeWeb.WelcomeLive do
   @impl true
   @spec mount(map(), map(), Socket.t()) :: {:ok, Socket.t()}
   def mount(_params, _session, socket) do
-    rooms = Server.list_rooms()
-
-    all_rooms = Enum.concat([@main_room], rooms)
+    all_rooms = get_all_rooms()
 
     {:ok,
      assign(socket,
-       stage: :rooms_list,
-       user_name: get_random_name(),
-       #  stage: :welcome,
-       #  user_name: "",
+       stage: :welcome,
+       user_name: "",
        form: to_form(%{"user_name" => ""}),
        all_rooms: all_rooms,
        selected_room: @main_room,
@@ -91,12 +87,21 @@ defmodule ChatPrototypeWeb.WelcomeLive do
         end
       end)
 
-    if room_uuid != @main_room.uuid do
+    if room_uuid == @main_room.uuid do
+      all_rooms = get_all_rooms()
+
+      {:noreply,
+       assign(socket,
+         active_rooms: active_rooms,
+         all_rooms: all_rooms,
+         selected_room: selected_room
+       )}
+    else
       room_messages = Room.get_messages(selected_room.name)
       send_update(ChatPrototypeWeb.ChatRoomComponent, id: room_uuid, new_messages: room_messages)
-    end
 
-    {:noreply, assign(socket, active_rooms: active_rooms, selected_room: selected_room)}
+      {:noreply, assign(socket, active_rooms: active_rooms, selected_room: selected_room)}
+    end
   end
 
   def handle_event("send_message", %{"text" => text}, socket) do
@@ -163,36 +168,6 @@ defmodule ChatPrototypeWeb.WelcomeLive do
     {:noreply, socket}
   end
 
-  @spec get_random_name() :: String.t()
-  defp get_random_name() do
-    names_list = [
-      "Maria",
-      "Alice",
-      "Leonor",
-      "Matilde",
-      "Benedita",
-      "Carolina",
-      "Beatriz",
-      "Margarida",
-      "Francisca",
-      "Camila",
-      "Francisco",
-      "Afonso",
-      "João",
-      "Tomás",
-      "Duarte",
-      "Lourenço",
-      "Santiago",
-      "Martim",
-      "Miguel",
-      "Gabriel"
-    ]
-
-    random_index = :rand.uniform(20) - 1
-
-    Enum.at(names_list, random_index)
-  end
-
   @spec subscribe_room(String.t(), list(), String.t()) :: any()
   defp subscribe_room(room_uuid, active_rooms, user_name) do
     active_rooms
@@ -206,5 +181,11 @@ defmodule ChatPrototypeWeb.WelcomeLive do
   @spec find_room_in_list(list(), String.t()) :: map()
   defp find_room_in_list(list, uuid) do
     Enum.find(list, fn room -> room.uuid == uuid end)
+  end
+
+  @spec get_all_rooms() :: list()
+  defp get_all_rooms() do
+    rooms = Server.list_rooms()
+    Enum.concat([@main_room], rooms)
   end
 end
