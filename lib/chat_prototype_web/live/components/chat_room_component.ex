@@ -40,7 +40,7 @@ defmodule ChatPrototypeWeb.ChatRoomComponent do
         <.simple_form id="chat_room" for={@form} phx-submit="send_message">
           <div class="flex flex-row gap-2">
             <div class="grow">
-              <.input field={@form["text"]} value={@form.params["text"]} />
+              <.input field={@form["text"]} />
             </div>
             <.button class="mt-2">Send</.button>
           </div>
