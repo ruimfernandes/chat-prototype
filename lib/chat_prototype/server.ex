@@ -1,4 +1,6 @@
 defmodule ChatPrototype.Server do
+  alias ChatPrototype.Server.Room
+
   def start_link() do
     DynamicSupervisor.start_link(name: __MODULE__, strategy: :one_for_one)
   end
@@ -11,10 +13,10 @@ defmodule ChatPrototype.Server do
     }
   end
 
-  def start_room(room_name) do
-    case start_child(room_name) do
-      {:ok, pid} -> %{name: room_name, pid: pid_to_string(pid)}
-      {:error, {:already_started, pid}} -> %{name: room_name, pid: pid_to_string(pid)}
+  def start_room(name) do
+    case start_child(name) do
+      {:ok, pid} -> %{name: name, pid: pid_to_string(pid)}
+      {:error, {:already_started, pid}} -> %{name: name, pid: pid_to_string(pid)}
     end
   end
 
@@ -24,12 +26,12 @@ defmodule ChatPrototype.Server do
     |> DynamicSupervisor.which_children()
     |> Enum.map(fn {_, pid, _, _} ->
       {_, name} = ChatPrototype.ProcessRegistry |> Registry.keys(pid) |> List.first()
-      %{pid: pid_to_string(pid), name: name}
+      Room.get_room_details(name)
     end)
   end
 
-  defp start_child(room_name) do
-    DynamicSupervisor.start_child(__MODULE__, {ChatPrototype.Server.Room, room_name})
+  defp start_child(name) do
+    DynamicSupervisor.start_child(__MODULE__, {ChatPrototype.Server.Room, name})
   end
 
   defp pid_to_string(pid) do
