@@ -5,11 +5,14 @@ defmodule ChatPrototypeWeb.RoomController do
 
   action_fallback ChatPrototypeWeb.FallbackController
 
+  @spec index(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def index(conn, _params) do
     rooms = Server.list_rooms()
+
     render(conn, :index, rooms: rooms)
   end
 
+  @spec create(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def create(conn, %{"name" => name}) do
     room = Server.start_room(name)
 

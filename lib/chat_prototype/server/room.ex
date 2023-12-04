@@ -1,22 +1,28 @@
 defmodule ChatPrototype.Server.Room do
   use GenServer, restart: :temporary
 
+  @spec start_link(String.t()) ::
+          {:ok, pid()} | :ignore | {:error, {:already_started, pid()} | term()}
   def start_link(name) do
     GenServer.start_link(ChatPrototype.Server.Room, name, name: via_tuple(name))
   end
 
+  @spec add_message(String.t(), map()) :: :ok
   def add_message(name, new_message) do
     GenServer.cast(via_tuple(name), {:add_message, new_message})
   end
 
+  @spec get_messages(String.t()) :: list()
   def get_messages(name) do
     GenServer.call(via_tuple(name), :get_messages)
   end
 
+  @spec get_room_details(String.t()) :: map()
   def get_room_details(name) do
     GenServer.call(via_tuple(name), :get_room_details)
   end
 
+  @spec via_tuple(String.t()) :: {:via, Registry, {ChatPrototype.ProcessRegistry, String.t()}}
   defp via_tuple(name) do
     ChatPrototype.ProcessRegistry.via_tuple({__MODULE__, name})
   end

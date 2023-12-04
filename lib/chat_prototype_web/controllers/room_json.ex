@@ -1,4 +1,5 @@
 defmodule ChatPrototypeWeb.RoomJSON do
+  @spec index(%{:rooms => list()}) :: %{data: list()}
   @doc """
   Renders a list of rooms.
   """
@@ -6,6 +7,7 @@ defmodule ChatPrototypeWeb.RoomJSON do
     %{data: rooms}
   end
 
+  @spec show(%{:room => map()}) :: %{data: map()}
   @doc """
   Renders a single room.
   """
