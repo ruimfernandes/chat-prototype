@@ -5,7 +5,7 @@ defmodule ChatPrototypeWeb.LoginComponent do
   def render_login(assigns) do
     ~H"""
     <div class="bg-zinc-600 grow p-10 text-gray-100">
-      <p class="text-4xl border-b-2">Welcome to this chat app!</p>
+      <p class="text-4xl border-b-2">Welcome to chat app!</p>
 
       <div class="mt-10 w-80">
         <.simple_form id="login_form" for={@form} phx-submit="sign_in">

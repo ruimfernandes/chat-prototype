@@ -7,7 +7,7 @@ defmodule ChatPrototypeWeb.WelcomeLiveTest do
     test "shows menu asking for user name", %{conn: conn} do
       {:ok, view, html} = live(conn, "/")
 
-      assert html =~ "Welcome to chat"
+      assert html =~ "Welcome to chat app!"
     end
 
     test "shows main room after submiting user name", %{conn: conn} do
@@ -17,7 +17,7 @@ defmodule ChatPrototypeWeb.WelcomeLiveTest do
              |> form("#login_form", %{
                "user_name" => "Rui Fernandes"
              })
-             |> render_submit() =~ "Feel free to join any chat"
+             |> render_submit() =~ "Feel free to join any of the rooms below"
     end
 
     test "joins a room from the main room", %{conn: conn} do
