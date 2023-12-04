@@ -1,4 +1,4 @@
-defmodule ChatPrototypeWeb.WelcomeLive do
+defmodule ChatPrototypeWeb.ChatLive do
   use ChatPrototypeWeb, :live_view
 
   import ChatPrototypeWeb.ChatMenuComponent
